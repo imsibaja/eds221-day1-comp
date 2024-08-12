@@ -1,6 +1,8 @@
 ---
 title: "Toolik Station Air Temperature"
 format: html
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -18,7 +20,7 @@ library(skimr)
 The data are stored in the `data-raw` subfolder. We'll use `here::here()` to point to it, and read it in using the `readr::read_csv()` function from the `readr` package (part of the `tidyverse`).
 
 ```{r}
-toolik_weather <- read_csv(here::here("data", "data-raw", "toolik_weather.csv"),)
+toolik_weather <- read_csv(here::here("data", "data-raw", "toolik_weather.csv"))
 ```
 
 -   First: Look at the data you've read in (always always)
@@ -49,6 +51,15 @@ I don't want to deal with those capital letters. These aren't even bad looking c
 ```{r}
 toolik_weather <- toolik_weather %>% clean_names() # What does this do? Say it in words.
 
+# Pipe operator: clean_names(toolik_weather) == toolik_weather %>% clean_names() == toolik_weather | clean_names()
+# pi %>% sin
+# [1] 1.224606e-16
+# pi %>% sin %>% cos
+# [1] 1
+# cos(sin(pi))
+# [1] 1
+
+
 # What is this %>% thing? Meet the pipe operator! Also, as of a couple months ago, |> is a native pipe operator (versus %>%, which comes along with the tidyverse)
 
 # Now what are the column names?
@@ -63,7 +74,9 @@ names(toolik_weather)
 Let's make a jitterplot of temperatures by month.
 
 ```{r}
-toolik_temp_plot <- ggplot(data = toolik_weather, aes(x = as.factor(month), y = daily_air_temp_mean_c)) +
+toolik_temp_plot <- ggplot(data = toolik_weather, 
+                           aes(x = as.factor(month), 
+                               y = daily_air_temp_mean_c)) +
   geom_jitter(aes(color = daily_air_temp_mean_c), show.legend = FALSE) +
   scale_color_gradient(low = "blue", high = "orange") +
   theme_minimal() +
@@ -83,3 +96,42 @@ ggsave(here::here("figs", "toolik_temp_plot.png"), height = 6, width = 7)
 Now try changing something about the ggplot code, and re-run your `ggsave()` line above. Does your saved figure change? Great!
 
 ## End Example 1
+
+
+```{r}
+toolik_chlorophyll <- read_csv(here::here("data", "data-raw", "toolik_chlorophyll.csv"))
+```
+
+```{r}
+skimr::skim(toolik_chlorophyll)
+```
+
+```{r}
+toolik_chlorophyll <- toolik_chlorophyll %>% 
+  clean_names()
+```
+
+```{r}
+dim(toolik_chlorophyll)
+names(toolik_chlorophyll)
+```
+
+```{r}
+toolik_chlorophyll$active_chl_a_ug_l <- na_if(toolik_chlorophyll$active_chl_a_ug_l, ".")
+
+toolik_chlorophyll$active_chl_a_ug_l <- as.numeric(toolik_chlorophyll$active_chl_a_ug_l)
+```
+
+```{r}
+ggplot(toolik_chlorophyll, aes(depth, active_chl_a_ug_l)) +
+  geom_point(aes(colour = active_chl_a_ug_l), 
+             show.legend = FALSE)+
+  scale_color_gradient(low = "blue", high = "orange") +
+  theme_minimal() +
+  labs(title = "Toolik Chlorophyll Concentrations",
+       x = "Lake Depth (m)",
+       y = " Active Chlorophyll Concentration (µg/L)")
+  
+  
+```
+
